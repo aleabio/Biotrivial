@@ -311,6 +311,16 @@
     padding: 12px 28px;
   }
 
+  .slide-buzzer-pill.state-gameover {
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+    color: #ffffff;
+    border: 3px solid #fde68a;
+    font-size: 1.25rem;
+    padding: 10px 28px;
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.45);
+    animation: pulseGlow 1.4s infinite;
+  }
+
   @keyframes pulseGlow {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.04); }
@@ -1016,6 +1026,7 @@
     <button class="btn btn-ok" id="presBtnOk" style="padding:4px 10px; font-size:0.78rem;" onclick="registerAnswer(true)" disabled>✅ Acierto</button>
     <button class="btn btn-err" id="presBtnErr" style="padding:4px 10px; font-size:0.78rem;" onclick="registerAnswer(false)" disabled>❌ Fallo / Rebote</button>
     <button class="btn" style="padding:4px 10px; font-size:0.78rem;" onclick="revealSolutionManual()">👁️ Solución</button>
+    <button class="btn" style="padding:4px 10px; font-size:0.78rem; background:linear-gradient(135deg,#f59e0b,#b45309); border-color:#fde68a;" onclick="endGameSession()">🏆 Fin Partida</button>
     <button class="btn" style="padding:4px 10px; font-size:0.78rem;" onclick="toggleFullScreen()">⛶</button>
     <button class="btn" style="padding:4px 10px; font-size:0.78rem;" onclick="location.reload()">🚪 Salir</button>
   </div>
@@ -1029,7 +1040,7 @@
         <svg viewBox="0 0 430 95"><use href="#biotrivialLogoSvg"/></svg>
       </div>
       <div class="bloque-box">
-        <span id="presBloqueText">Bloque 1</span>
+        <span id="presBloqueText">bioTRIVIAL</span>
       </div>
     </div>
 
@@ -1043,7 +1054,7 @@
       </div>
 
       <div class="slide-question-text" id="presQuestionText">
-        ¿Qué es el fijismo?
+        Esperando inicio de la partida...
       </div>
 
       <div class="slide-solution-card" id="presSolutionCard">
@@ -1086,7 +1097,7 @@
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv,.tsv" style="display:none" />
       <button class="btn" onclick="document.getElementById('excelFileInput').click()">📂 Cargar Excel</button>
       <button class="btn" onclick="openModal('pasteModal')">📋 Pegar Excel</button>
-      <button class="btn" onclick="openDbModal()">🗂️ Preguntas (<span id="totalQCount">40</span>)</button>
+      <button class="btn" onclick="openDbModal()">🗂️ Preguntas (<span id="totalQCount">0</span>)</button>
       <button class="btn" onclick="openModal('teamsModal')">👥 Equipos / Clave</button>
       <button class="btn" onclick="location.reload()">🚪 Salir</button>
     </div>
@@ -1131,9 +1142,12 @@
             </button>
           </div>
 
-          <div style="display:flex; align-items:center; gap:8px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <button class="btn" id="btnRevealOnly" onclick="revealSolutionManual()" disabled>
               👁️ Mostrar Solución
+            </button>
+            <button class="btn" id="btnEndGame" style="background:linear-gradient(135deg, #f59e0b, #b45309); border-color:#fde047; color:#ffffff; font-weight:900;" onclick="endGameSession()" title="Finaliza la partida y muestra en grande el nombre del equipo ganador">
+              🏆 Fin de la Partida
             </button>
           </div>
         </div>
@@ -1148,7 +1162,7 @@
             <svg viewBox="0 0 430 95"><use href="#biotrivialLogoSvg"/></svg>
           </div>
           <div class="bloque-box">
-            <span id="profBloqueText">Bloque 1</span>
+            <span id="profBloqueText">bioTRIVIAL</span>
           </div>
         </div>
 
@@ -1162,7 +1176,7 @@
           </div>
 
           <div class="slide-question-text" id="profQuestionText">
-            ¿Qué es el fijismo?
+            Banco de preguntas vacío · Carga tu Excel o añade preguntas
           </div>
 
           <div class="slide-solution-card" id="profSolutionCard">
@@ -1224,7 +1238,7 @@
 
     <div>
       <label style="font-size:0.8rem; font-weight:800; color:#94a3b8; display:block; margin-bottom:4px;">NOMBRE DEL EQUIPO:</label>
-      <input type="text" id="studentTeamNameInput" placeholder="Ej: Las mulas / Neuronas..." maxlength="22"
+      <input type="text" id="studentTeamNameInput" placeholder="Nombre de vuestro equipo..." maxlength="22"
         style="width:100%; font-size:1.1rem; font-weight:700;" />
     </div>
 
@@ -1262,26 +1276,44 @@
 
 <!-- ==================== MODAL: CONTRASEÑA MODO PROFESOR ==================== -->
 <div class="modal-backdrop" id="passwordModal">
-  <div class="modal-content" style="max-width:440px;">
+  <div class="modal-content" style="max-width:480px;">
     <div class="modal-header">
       <h3>🔒 Acceso al Modo Profesor</h3>
       <button class="btn" onclick="closeModal('passwordModal')">✖</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.4;">
-        Introduce la contraseña docente para iniciar la sesión principal y generar automáticamente el código de sala (por defecto: <code>1bach</code>).
-      </p>
       <div>
-        <label style="font-size:0.78rem; font-weight:800; color:#94a3b8; display:block; margin-bottom:6px;">🔑 CONTRASEÑA DEL PROFESOR:</label>
+        <label style="font-size:0.78rem; font-weight:800; color:#94a3b8; display:block; margin-bottom:6px;">🔑 1. CONTRASEÑA DEL PROFESOR (por defecto: <code>1bach</code>):</label>
         <input type="password" id="teacherPassInput" placeholder="Contraseña (1bach)" style="width:100%; font-size:1.2rem; text-align:center;"
           onkeydown="if(event.key==='Enter') verifyTeacherPassword()" />
       </div>
+
       <div id="passErrorMsg" style="color:#f87171; font-size:0.85rem; display:none; text-align:center;">
         ❌ Contraseña incorrecta.
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+
+      <!-- Opción principal: Crear Sala Nueva -->
+      <button class="btn btn-ok" style="width:100%; justify-content:center; padding:12px; font-size:1rem;" onclick="verifyTeacherPassword(false)">
+        🚀 Entrar y Crear Sala Nueva (Ordenador Principal)
+      </button>
+
+      <!-- Opción secundaria: Entrar a una sala ya existente desde otro dispositivo -->
+      <div style="background:#0f172a; border:1px solid rgba(56,189,248,0.35); border-radius:14px; padding:12px 14px; margin-top:4px;">
+        <label style="font-size:0.76rem; font-weight:800; color:#38bdf8; display:block; margin-bottom:6px;">
+          📱 ¿ENTRAS DESDE OTRO DISPOSITIVO (TABLET / MÓVIL) A UNA SALA YA ABIERTA?
+        </label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="teacherRoomJoinInput" placeholder="Código de 4 dígitos" maxlength="8"
+            style="flex:1; font-size:1.1rem; font-weight:900; text-align:center; letter-spacing:3px; color:#38bdf8;"
+            onkeydown="if(event.key==='Enter') verifyTeacherPassword(true)" />
+          <button class="btn btn-step-1" style="padding:8px 14px; font-size:0.9rem;" onclick="verifyTeacherPassword(true)">
+            🔗 Unirse a Sala
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:2px;">
         <button class="btn" onclick="closeModal('passwordModal')">Cancelar</button>
-        <button class="btn btn-ok" onclick="verifyTeacherPassword()">🔓 Entrar al Panel</button>
       </div>
     </div>
   </div>
@@ -1320,22 +1352,52 @@
 
 <!-- ==================== MODAL: QR Y CONEXIÓN MÓVIL ==================== -->
 <div class="modal-backdrop" id="qrModal">
-  <div class="modal-content" style="max-width:680px;">
+  <div class="modal-content" style="max-width:700px;">
     <div class="modal-header">
-      <h3>📲 Código de Sala para Móviles y Proyector</h3>
+      <h3>📲 Código de Sala para Móviles, otro Dispositivo Profesor y Proyector</h3>
       <button class="btn" onclick="closeModal('qrModal')">✖</button>
     </div>
     <div class="modal-body" style="text-align:center; align-items:center;">
-      <div style="background:rgba(56,189,248,0.12); border:2px solid #38bdf8; border-radius:18px; padding:16px; width:100%;">
-        <div style="font-size:0.85rem; font-weight:800; color:#bae6fd;">CÓDIGO ÚNICO PARA LOS 3 MODOS (PROFESOR, PRESENTACIÓN Y ALUMNOS):</div>
-        <div style="font-size:3.2rem; font-weight:900; letter-spacing:8px; color:#fff;" id="modalBigRoomCode">----</div>
-        <div style="font-size:0.82rem; color:#94a3b8; margin-top:4px;" id="modalNetRoleInfo">Sincronización WebRTC + Local activa</div>
+      <div style="background:rgba(56,189,248,0.12); border:2px solid #38bdf8; border-radius:18px; padding:14px; width:100%;">
+        <div style="font-size:0.82rem; font-weight:800; color:#bae6fd;">CÓDIGO ÚNICO DE SALA (ALUMNOS Y MANDO PROFESOR):</div>
+        <div style="font-size:3rem; font-weight:900; letter-spacing:8px; color:#fff;" id="modalBigRoomCode">----</div>
+        <div style="font-size:0.8rem; color:#94a3b8; margin-top:2px;" id="modalNetRoleInfo">Sincronización WebRTC + Local activa</div>
       </div>
+
+      <!-- Selector de modo para el QR -->
+      <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-ok" id="btnQrModeStudent" onclick="setQrRoleMode('student')" style="font-size:0.82rem; padding:6px 14px;">
+          📱 QR para Alumnos (Pulsadores)
+        </button>
+        <button class="btn" id="btnQrModeTeacher" onclick="setQrRoleMode('teacher')" style="font-size:0.82rem; padding:6px 14px;">
+          👨‍🏫 QR Mando Profesor (Otro dispositivo)
+        </button>
+      </div>
+
       <div id="qrcodeContainer" style="background:#fff; padding:12px; border-radius:12px;"></div>
-      <div style="width:100%; max-width:520px; text-align:left;">
-        <label style="font-size:0.75rem; font-weight:800; color:#94a3b8; display:block; margin-bottom:4px;">🌐 ENLACE WEB PÚBLICO PARA EL QR (SI LO SUBES A TIINY.HOST / NETLIFY):</label>
-        <input type="text" id="customPublicUrlInput" placeholder="Opcional: pega aquí el enlace https://... para que el QR abra directo en iPhone"
-          style="width:100%; font-size:0.85rem; padding:8px 10px;" oninput="generateRoomQR()" />
+      <div id="qrModeCaption" style="font-size:0.8rem; color:#bae6fd; font-weight:700;">
+        Escanea este QR con los móviles de los alumnos para abrir su pulsador
+      </div>
+
+      <!-- Cambiar/Vincular este Modo Profesor a otra sala activa -->
+      <div style="width:100%; max-width:540px; background:#0f172a; border:1px solid rgba(56,189,248,0.35); border-radius:12px; padding:10px 14px; text-align:left;">
+        <label style="font-size:0.75rem; font-weight:800; color:#38bdf8; display:block; margin-bottom:6px;">
+          🔗 ¿QUIERES CONECTAR ESTE PANEL DE PROFESOR A OTRA SALA YA ABIERTA?
+        </label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="switchTeacherRoomInput" placeholder="Escribe el código de 4 dígitos de la otra pantalla" maxlength="8"
+            style="flex:1; font-size:0.95rem; font-weight:900; text-align:center; letter-spacing:2px; color:#38bdf8;"
+            onkeydown="if(event.key==='Enter') switchTeacherToExistingRoom()" />
+          <button class="btn btn-step-1" style="padding:6px 14px; font-size:0.84rem;" onclick="switchTeacherToExistingRoom()">
+            🔗 Conectar
+          </button>
+        </div>
+      </div>
+
+      <div style="width:100%; max-width:540px; text-align:left;">
+        <label style="font-size:0.73rem; font-weight:800; color:#94a3b8; display:block; margin-bottom:4px;">🌐 ENLACE WEB PÚBLICO PARA EL QR (OPCIONAL SI ABRES EL ARCHIVO EN LOCAL):</label>
+        <input type="text" id="customPublicUrlInput" placeholder="Opcional: pega aquí tu enlace de GitHub Pages https://..."
+          style="width:100%; font-size:0.82rem; padding:7px 10px;" oninput="generateRoomQR()" />
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
         <button class="btn btn-ok" onclick="openTestStudentPopup()">🧪 Abrir Pulsador Móvil de Prueba</button>
@@ -1372,15 +1434,16 @@
     <div class="modal-body">
       <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center;">
         <div style="display:flex; gap:6px; flex-wrap:wrap; flex:1;">
-          <input type="text" id="quickTopic" placeholder="Bloque (ej. Bloque 1)" style="width:145px;" />
-          <input type="text" id="quickQ" placeholder="Escribe una nueva pregunta..." style="flex:1; min-width:220px;" />
-          <input type="text" id="quickA" placeholder="Respuesta correcta..." style="width:185px;" />
+          <input type="text" id="quickTopic" placeholder="Bloque (ej. Bloque 1)" style="width:130px;" />
+          <input type="text" id="quickQ" placeholder="Escribe una nueva pregunta..." style="flex:1; min-width:200px;" />
+          <input type="text" id="quickA" placeholder="Respuesta correcta..." style="width:165px;" />
+          <input type="text" id="quickImg" placeholder="URL Imagen (opcional)..." style="width:165px;" />
           <button class="btn btn-ok" onclick="addQuickQuestion()">➕ Añadir</button>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="btn" style="background:#0284c7; border-color:#38bdf8;" onclick="exportBankToCSV()" title="Descargar las preguntas actuales en formato CSV compatible con Excel">💾 Exportar a Excel (.csv)</button>
+          <button class="btn" style="background:#059669; border-color:#34d399;" onclick="downloadUpdatedIndexHtml()" title="Descarga el archivo index.html con estas preguntas y equipos ya grabados como predeterminados para subirlo a GitHub Pages">📥 Descargar index.html actualizado</button>
+          <button class="btn" style="background:#0284c7; border-color:#38bdf8;" onclick="exportBankToCSV()" title="Descargar las preguntas actuales en formato CSV compatible con Excel">💾 Exportar CSV</button>
           <button class="btn btn-err" onclick="clearAllQuestions()" title="Borrar todas las preguntas para empezar desde cero">🗑️ Vaciar todo</button>
-          <button class="btn btn-reb" onclick="restoreDefaultBank()">↺ Restaurar 40 por defecto</button>
         </div>
       </div>
       <div style="max-height:52vh; overflow-y:auto; border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
@@ -1422,9 +1485,12 @@
       </div>
       <div id="teamsConfigContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
 
-      <div style="display:flex; justify-content:space-between; margin-top:12px;">
-        <button class="btn btn-err" onclick="resetScoresToZero()">🗑️ Poner marcadores a 0</button>
-        <button class="btn btn-ok" onclick="closeModal('teamsModal')">Guardar</button>
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:12px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-err" onclick="resetScoresToZero()">🗑️ Poner marcadores a 0</button>
+          <button class="btn" style="background:#0284c7; border-color:#38bdf8;" onclick="downloadUpdatedIndexHtml()" title="Descarga un nuevo archivo index.html con tus preguntas, equipos y clave grabados dentro del código para subirlo a GitHub">📥 Descargar index.html con mis datos</button>
+        </div>
+        <button class="btn btn-ok" onclick="saveAndCloseTeamsModal()">💾 Guardar Cambios</button>
       </div>
     </div>
   </div>
@@ -1433,7 +1499,7 @@
 <div class="toast" id="toastMsg"></div>
 
 <script>
-const DEFAULT_QUESTIONS = [{"id": 1, "bloque": "Bloque 1", "pregunta": "¿Qué es el fijismo?", "respuesta": "Teoría precientífica que sostiene que las especies se han mantenido invariables desde su creación.", "explicacion": "Defendida históricamente por autores como Linneo o Cuvier antes del evolucionismo.", "opciones": ["Teoría que sostiene que las especies no cambian", "Teoría evolutiva de Lamarck", "Mutación genética aleatoria", "Selección natural darwiniana"], "usada": false}, {"id": 2, "bloque": "Bloque 2", "pregunta": "¿Cuáles son los tipos de mecanismos de polinización?", "respuesta": "Anemógama (viento), entomógama (insectos), ornitógama (aves) e hidrófila (agua), pudiendo ser directa (autopolinización) o cruzada.", "explicacion": "La mayoría de las angiospermas recurren a polinización zoófila (entomógama) o anemófila.", "opciones": ["Anemógama, entomógama, hidrófila y zoófila (directa o cruzada)", "Solo por esporas flageladas", "Exclusivamente por fragmentación", "Bipartición y gemación"], "usada": false}, {"id": 3, "bloque": "Bloque 3", "pregunta": "Nombra las células gliales", "respuesta": "Astrocitos, oligodendrocitos, células de Schwann, microglía y células ependimarias.", "explicacion": "Acompañan, nutren, aíslan (vaina de mielina) y defienden a las neuronas en el SNC y SNP.", "opciones": ["Astrocitos, oligodendrocitos, microglía y células de Schwann", "Eritrocitos, leucocitos y plaquetas", "Condrocitos, osteocitos y adipocitos", "Miocitos y fibroblastos"], "usada": false}, {"id": 4, "bloque": "Bloque 4", "pregunta": "¿Cuáles son las bacterias que captan el nitrógeno atmosférico para las plantas leguminosas con las que viven en simbiosis?", "respuesta": "Bacterias del género Rhizobium.", "explicacion": "Forman nódulos radicales en las raíces de las leguminosas y fijan el N2 atmosférico convirtiéndolo en amonio.", "opciones": ["Género Rhizobium", "Escherichia coli", "Lactobacillus", "Streptococcus"], "usada": false}, {"id": 5, "bloque": "Bloque 1", "pregunta": "¿Qué tipo de enlace covalente une dos monosacáridos para formar un disacárido liberando una molécula de agua?", "respuesta": "Enlace O-glucosídico", "explicacion": "Se establece entre dos grupos hidroxilo (-OH) de distintos monosacáridos.", "opciones": ["Enlace O-glucosídico", "Enlace peptídico", "Enlace fosfodiéster", "Enlace éster"], "usada": false}, {"id": 6, "bloque": "Bloque 1", "pregunta": "¿Cuál es el polisacárido de reserva energética propio de los tejidos animales, abundante en hígado y músculo?", "respuesta": "Glucógeno", "explicacion": "Polímero de α-D-glucosa con enlaces α(1→4) y ramificaciones α(1→6).", "opciones": ["Glucógeno", "Almidón", "Celulosa", "Quitina"], "usada": false}, {"id": 7, "bloque": "Bloque 1", "pregunta": "¿Qué propiedad físico-química del agua le permite ascender por los vasos del xilema en contra de la gravedad?", "respuesta": "Capilaridad (elevada cohesión y adhesión)", "explicacion": "Los puentes de hidrógeno entre moléculas de agua y con las paredes de celulosa permiten el ascenso de la savia bruta.", "opciones": ["Capilaridad (elevada cohesión y adhesión)", "Bajo calor específico", "Menor densidad en estado sólido", "Carácter dipolar"], "usada": false}, {"id": 8, "bloque": "Bloque 1", "pregunta": "¿Cómo se denomina la pérdida de la estructura secundaria, terciaria o cuaternaria de una proteína por cambios de pH o temperatura?", "respuesta": "Desnaturalización", "explicacion": "Se conservan los enlaces peptídicos (estructura primaria), pero la proteína pierde su función biológica.", "opciones": ["Desnaturalización", "Hidrólisis", "Renaturalización", "Esterificación"], "usada": false}, {"id": 9, "bloque": "Bloque 1", "pregunta": "¿Qué base nitrogenada pirimidínica es exclusiva del ARN y sustituye a la timina del ADN?", "respuesta": "Uracilo (U)", "explicacion": "Carece del grupo metilo presente en la timina y se empareja con la adenina mediante dos puentes de hidrógeno.", "opciones": ["Uracilo (U)", "Citosina (C)", "Adenina (A)", "Guanina (G)"], "usada": false}, {"id": 10, "bloque": "Bloque 1", "pregunta": "¿Qué grupo de lípidos insaponificables incluye al colesterol, la vitamina D y hormonas como la testosterona?", "respuesta": "Esteroides (derivados del esterano)", "explicacion": "Derivan del ciclopentanoperhidrofenantreno (esterano) y no contienen ácidos grasos.", "opciones": ["Esteroides", "Terpenos o isoprenoides", "Fosfolípidos", "Acilglicéridos"], "usada": false}, {"id": 11, "bloque": "Bloque 2", "pregunta": "¿En qué orgánulo celular tienen lugar tanto el ciclo de Krebs como la cadena respiratoria aerobia?", "respuesta": "Mitocondria", "explicacion": "El ciclo de Krebs ocurre en la matriz mitocondrial y la cadena transportadora de electrones en las crestas.", "opciones": ["Mitocondria", "Retículo endoplasmático rugoso", "Aparato de Golgi", "Peroxisoma"], "usada": false}, {"id": 12, "bloque": "Bloque 2", "pregunta": "¿En qué fase de la mitosis los cromosomas alcanzan su máxima condensación y se alinean en la placa ecuatorial?", "respuesta": "Metafase", "explicacion": "Los microtúbulos cinetocóricos alinean los cromosomas en el plano ecuatorial antes de separar las cromátidas.", "opciones": ["Metafase", "Profase", "Anafase", "Telofase"], "usada": false}, {"id": 13, "bloque": "Bloque 2", "pregunta": "¿Cómo se llama el proceso de la profase I meiótica en el que los cromosomas homólogos intercambian fragmentos de ADN?", "respuesta": "Sobrecruzamiento (crossing-over) o recombinación", "explicacion": "Ocurre en el subestadio de paquiteno y su manifestación citológica visible son los quiasmas.", "opciones": ["Sobrecruzamiento (recombinación)", "Bipartición", "Citocinesis", "Sinapsis"], "usada": false}, {"id": 14, "bloque": "Bloque 2", "pregunta": "¿Qué tejido conectivo especializado carece de vasos sanguíneos y nervios, y sus células se denominan condrocitos?", "respuesta": "Tejido cartilaginoso (cartílago)", "explicacion": "Se nutre por difusión desde el pericondrio fibroso que lo rodea.", "opciones": ["Tejido cartilaginoso", "Tejido óseo esponjoso", "Tejido adiposo", "Tejido conjuntivo laxo"], "usada": false}, {"id": 15, "bloque": "Bloque 2", "pregunta": "¿Qué orgánulo membranoso eucariota modifica, empaqueta y distribuye proteínas procedentes del retículo endoplasmático rugoso?", "respuesta": "Aparato de Golgi", "explicacion": "Está formado por pilas de cisternas llamadas dictiosomas con una cara cis y una cara trans.", "opciones": ["Aparato de Golgi", "Ribosoma 80S", "Centrosoma", "Lisosoma"], "usada": false}, {"id": 16, "bloque": "Bloque 2", "pregunta": "¿Qué tipo de tejido muscular presenta estriaciones transversales pero contracción involuntaria y discos intercalares?", "respuesta": "Tejido muscular estriado cardíaco (miocardio)", "explicacion": "Sus células (cardiomiocitos) tienen uno o dos núcleos centrales y están acopladas eléctricamente.", "opciones": ["Muscular estriado cardíaco", "Muscular liso", "Muscular estriado esquelético", "Epitelio glandular"], "usada": false}, {"id": 17, "bloque": "Bloque 3", "pregunta": "¿Qué estructuras excretoras formadas por túbulos ciegos que vierten al intestino son características de los insectos?", "respuesta": "Túbulos de Malpighi", "explicacion": "Filtran la hemolinfa y excretan ácido úrico semisólido junto con las heces para ahorrar agua.", "opciones": ["Túbulos de Malpighi", "Metanefridios", "Protonefridios", "Glándulas antenales (verdes)"], "usada": false}, {"id": 18, "bloque": "Bloque 3", "pregunta": "¿Qué tipo de circulación sanguínea poseen los peces óseos y cartilaginosos?", "respuesta": "Cerrada, simple y completa", "explicacion": "La sangre pasa una sola vez por el corazón en cada circuito y no hay mezcla de sangre oxigenada y desoxigenada.", "opciones": ["Cerrada, simple y completa", "Cerrada, doble e incompleta", "Cerrada, doble y completa", "Abierta o lagunar"], "usada": false}, {"id": 19, "bloque": "Bloque 3", "pregunta": "¿Qué enzima del jugo gástrico inicia la digestión química de las proteínas en el estómago?", "respuesta": "Pepsina", "explicacion": "Es segregada como pepsinógeno inactivo por las células principales y se activa en presencia de HCl.", "opciones": ["Pepsina", "Amilasa salival (ptialina)", "Tripsina", "Lipasa pancreática"], "usada": false}, {"id": 20, "bloque": "Bloque 3", "pregunta": "¿Mediante qué sistema respiratorio de conductos quitinosos ramificados llevan los insectos el oxígeno directamente a sus células?", "respuesta": "Sistema traqueal (tráqueas y traqueolas)", "explicacion": "Por ello su hemolinfa no necesita pigmentos respiratorios para transportar oxígeno.", "opciones": ["Sistema traqueal", "Branquias internas", "Pulmones en libro (filotráqueas)", "Respiración cutánea"], "usada": false}, {"id": 21, "bloque": "Bloque 3", "pregunta": "¿Qué hormona producida por las células beta de los islotes de Langerhans del páncreas reduce la glucemia en sangre?", "respuesta": "Insulina", "explicacion": "Estimula la captación celular de glucosa y la síntesis de glucógeno en hígado y músculo.", "opciones": ["Insulina", "Glucagón", "Cortisol", "Adrenalina"], "usada": false}, {"id": 22, "bloque": "Bloque 3", "pregunta": "Durante un potencial de acción nervioso, ¿qué ion entra masivamente en el axón provocando la despolarización de la membrana?", "respuesta": "Sodio (Na+)", "explicacion": "La apertura de canales de Na+ dependientes de voltaje invierte el potencial de -70 mV a +35 mV.", "opciones": ["Sodio (Na+)", "Potasio (K+)", "Cloro (Cl-)", "Magnesio (Mg2+)"], "usada": false}, {"id": 23, "bloque": "Bloque 4", "pregunta": "¿Qué tejido conductor vegetal está formado por células vivas (tubos cribosos y células acompañantes) y transporta savia elaborada?", "respuesta": "Floema (vasos liberianos)", "explicacion": "Sus tabiques transversales están perforados formando placas cribosas.", "opciones": ["Floema", "Xilema", "Colénquima", "Esclerénquima"], "usada": false}, {"id": 24, "bloque": "Bloque 4", "pregunta": "¿Qué grupo de plantas terrestres no vasculares carece de verdaderas raíces, tallos y hojas y tiene el gametofito como fase dominante?", "respuesta": "Briofitas (musgos, hepáticas y antoceros)", "explicacion": "Presentan organización talofítica o cormoide primitiva (rizoides, cauloide y filoides).", "opciones": ["Briofitas", "Pteridofitas (helechos)", "Gimnospermas", "Angiospermas"], "usada": false}, {"id": 25, "bloque": "Bloque 4", "pregunta": "¿Qué fitohormona gaseosa es responsable de la maduración de los frutos y de la abscisión (caída) de las hojas?", "respuesta": "Etileno", "explicacion": "Es la única hormona vegetal que actúa en estado gaseoso a temperatura ambiente.", "opciones": ["Etileno", "Auxina (AIA)", "Giberelina", "Citoquinina"], "usada": false}, {"id": 26, "bloque": "Bloque 4", "pregunta": "¿Cómo se llaman las estructuras epidérmicas formadas por dos células oclusivas que regulan la transpiración y el intercambio de gases?", "respuesta": "Estomas", "explicacion": "Abren o cierran el ostiolo según los cambios de turgencia regulados por el ion potasio (K+).", "opciones": ["Estomas", "Lenticelas", "Tricomas", "Hidatodos"], "usada": false}, {"id": 27, "bloque": "Bloque 4", "pregunta": "¿Qué meristemo secundario o lateral origina xilema secundario (madera) hacia el interior y floema secundario hacia el exterior?", "respuesta": "Cámbium vascular", "explicacion": "Es responsable del crecimiento en grosor de los tallos y raíces leñosas.", "opciones": ["Cámbium vascular", "Felógeno (cámbium suberógeno)", "Meristemo apical", "Periciclo"], "usada": false}, {"id": 28, "bloque": "Bloque 4", "pregunta": "En el ciclo de Calvin de la fotosíntesis, ¿qué enzima fija el CO2 atmosférico sobre la ribulosa-1,5-bisfosfato?", "respuesta": "RuBisCO", "explicacion": "La ribulosa-1,5-bisfosfato carboxilasa-oxigenasa es la proteína más abundante de la biosfera.", "opciones": ["RuBisCO", "ATP sintasa", "Catalasa", "Piruvato quinasa"], "usada": false}, {"id": 29, "bloque": "Bloque 5", "pregunta": "¿Qué categoría taxonómica se sitúa inmediatamente por debajo del Filo (o División) y por encima del Orden?", "respuesta": "Clase", "explicacion": "Secuencia: Dominio > Reino > Filo/División > Clase > Orden > Familia > Género > Especie.", "opciones": ["Clase", "Familia", "Género", "Subfilo"], "usada": false}, {"id": 30, "bloque": "Bloque 5", "pregunta": "¿Qué polisacárido nitrogenado forma la pared celular característica de los hongos (Reino Fungi)?", "respuesta": "Quitina", "explicacion": "Es el mismo polímero de N-acetilglucosamina que forma el exoesqueleto de los artrópodos.", "opciones": ["Quitina", "Celulosa", "Peptidoglicano (mureína)", "Agar-agar"], "usada": false}, {"id": 31, "bloque": "Bloque 5", "pregunta": "¿Cómo se llaman los órganos con el mismo origen embrionario y estructura interna pero distinta función por evolución divergente?", "respuesta": "Órganos homólogos", "explicacion": "Ejemplo: el ala de un murciélago, la aleta de una ballena y el brazo humano.", "opciones": ["Órganos homólogos", "Órganos análogos", "Órganos vestigiales", "Homoplasias"], "usada": false}, {"id": 32, "bloque": "Bloque 5", "pregunta": "¿Qué científico propuso en 1990 la clasificación de los seres vivos en tres Dominios (Bacteria, Archaea y Eukarya)?", "respuesta": "Carl Woese", "explicacion": "Se basó en la comparación de secuencias del ARN ribosómico 16S.", "opciones": ["Carl Woese", "Lynn Margulis", "Robert Whittaker", "Ernst Mayr"], "usada": false}, {"id": 33, "bloque": "Bloque 5", "pregunta": "¿Qué teoría formulada por Lynn Margulis explica el origen de mitocondrias y cloroplastos a partir de bacterias endosimbiontes?", "respuesta": "Teoría endosimbiótica (Endosimbiosis seriada)", "explicacion": "Explica por qué mitocondrias y cloroplastos poseen ADN circular propio, ribosomas 70S y doble membrana.", "opciones": ["Teoría endosimbiótica", "Teoría sintética (Neodarwinismo)", "Equilibrio puntuado", "Generación espontánea"], "usada": false}, {"id": 34, "bloque": "Bloque 5", "pregunta": "¿A qué filo de invertebrados deuteróstomos con simetría pentarradial y sistema ambulacral pertenecen los erizos de mar?", "respuesta": "Equinodermos (Echinodermata)", "explicacion": "Poseen un endoesqueleto dérmico de placas calcáreas y pies ambulacrales.", "opciones": ["Equinodermos", "Cnidarios", "Moluscos", "Anélidos"], "usada": false}, {"id": 35, "bloque": "Bloque 6", "pregunta": "¿Cómo se denomina la discontinuidad sísmica a 2900 km de profundidad que separa el manto inferior del núcleo externo líquido?", "respuesta": "Discontinuidad de Gutenberg", "explicacion": "En ella se detienen las ondas S porque no pueden propagarse a través de medios fluidos.", "opciones": ["Discontinuidad de Gutenberg", "Discontinuidad de Mohorovičić (Moho)", "Discontinuidad de Lehman", "Discontinuidad de Conrad"], "usada": false}, {"id": 36, "bloque": "Bloque 6", "pregunta": "¿Qué roca ígnea plutónica compuesta por cuarzo, feldespato y mica es la más abundante en la corteza continental?", "respuesta": "Granito", "explicacion": "Presenta textura holocristalina granuda debido al lento enfriamiento del magma en profundidad.", "opciones": ["Granito", "Basalto", "Pumita (piedra pómez)", "Obsidiana"], "usada": false}, {"id": 37, "bloque": "Bloque 6", "pregunta": "¿En qué tipo de límite o borde de placa litosférica se destruye corteza oceánica mediante subducción?", "respuesta": "Borde convergente (o destructivo)", "explicacion": "Origina fosas oceánicas, vulcanismo andesítico y cordilleras como los Andes.", "opciones": ["Borde convergente (destructivo)", "Borde divergente (constructivo)", "Borde transformante (pasivo)", "Rift continental"], "usada": false}, {"id": 38, "bloque": "Bloque 6", "pregunta": "¿Qué principio estratigráfico de Steno afirma que en una serie no invertida los estratos inferiores son más antiguos que los superiores?", "respuesta": "Principio de superposición de los estratos", "explicacion": "Permite ordenar cronológicamente los materiales sedimentarios de forma relativa.", "opciones": ["Principio de superposición de estratos", "Principio de actualismo", "Principio de sucesión faunística", "Principio de intersección"], "usada": false}, {"id": 39, "bloque": "Bloque 6", "pregunta": "¿Qué escala mide la magnitud de un terremoto (energía liberada en el hipocentro), frente a la escala macrosísmica de Mercalli?", "respuesta": "Escala de Richter (o magnitud momento Mw)", "explicacion": "Es una escala logarítmica en la que cada grado multiplica por ~32 la energía liberada.", "opciones": ["Escala de Richter (o Mw)", "Escala de Mohs", "Escala de Fujita", "Escala de Wentworth"], "usada": false}, {"id": 40, "bloque": "Bloque 6", "pregunta": "¿Qué proceso geológico endógeno transforma una roca en estado sólido por aumento de presión y/o temperatura sin llegar a fundirla?", "respuesta": "Metamorfismo", "explicacion": "Origina rocas metamórficas como el mármol (a partir de caliza) o la pizarra (a partir de lutitas).", "opciones": ["Metamorfismo", "Magmatismo", "Diagénesis (litificación)", "Meteorización química"], "usada": false}];
+const DEFAULT_QUESTIONS = [];
 
 const PEER_CONFIG = {
   config: {
@@ -1446,12 +1512,8 @@ const PEER_CONFIG = {
   }
 };
 
-let teams = [
-  { id: "team-1", name: "Las mulas", score: 10, connected: false, conn: null },
-  { id: "team-2", name: "C. infiltradas", score: 9, connected: false, conn: null },
-  { id: "team-3", name: "Neuronas", score: 7, connected: false, conn: null },
-  { id: "team-4", name: "Mitrocondrias", score: 8, connected: false, conn: null }
-];
+const DEFAULT_TEAMS = [];
+let teams = JSON.parse(JSON.stringify(DEFAULT_TEAMS));
 
 let questions = [];
 const _memStore = {};
@@ -1614,6 +1676,15 @@ function playFailReboundSound() {
   setTimeout(() => playTone(165, 0.34, "sawtooth", 0.24), 160);
 }
 
+function playVictoryFanfare() {
+  playTone(523.25, 0.14, "triangle", 0.26);
+  setTimeout(() => playTone(659.25, 0.14, "triangle", 0.26), 140);
+  setTimeout(() => playTone(783.99, 0.14, "triangle", 0.26), 280);
+  setTimeout(() => playTone(1046.5, 0.22, "triangle", 0.28), 420);
+  setTimeout(() => playTone(783.99, 0.14, "triangle", 0.26), 660);
+  setTimeout(() => playTone(1046.5, 0.55, "triangle", 0.30), 820);
+}
+
 function playSoundByName(soundName) {
   if (appRole !== "PRESENTATION") return;
   switch (soundName) {
@@ -1640,6 +1711,9 @@ function playSoundByName(soundName) {
       break;
     case "TEAM_JOIN":
       playTone(700, 0.09, "sine", 0.16);
+      break;
+    case "VICTORY_FANFARE":
+      playVictoryFanfare();
       break;
   }
 }
@@ -1697,7 +1771,8 @@ function bootBiotrivialApp() {
   }
 
   loadSavedQuestions();
-  currentQuestion = questions[0];
+  loadSavedTeams();
+  currentQuestion = null;
 
   // If booted as a child window with initial state from Teacher Mode, apply it immediately
   if (window.__BOOT_CONFIG && window.__BOOT_CONFIG.initialState) {
@@ -1749,6 +1824,9 @@ function bootBiotrivialApp() {
   } else if (hash.startsWith("#presentation-")) {
     hashRole = "presentation";
     hashRoom = hash.replace("#presentation-", "").trim();
+  } else if (hash.startsWith("#teacher-")) {
+    hashRole = "teacher";
+    hashRoom = hash.replace("#teacher-", "").trim();
   }
   const roleParam = bootRole || params.get("role") || hashRole;
   const roomParam = (bootRoom || params.get("room") || hashRoom || "").trim();
@@ -1757,6 +1835,8 @@ function bootBiotrivialApp() {
     startStudentMode(roomParam);
   } else if (roleParam === "presentation") {
     startPresentationModeDirect(roomParam);
+  } else if (roleParam === "teacher") {
+    openPasswordModal(roomParam);
   }
 }
 
@@ -1768,34 +1848,91 @@ if (document.readyState === "loading") {
 window.addEventListener("load", bootBiotrivialApp);
 
 function loadSavedQuestions() {
-  const saved = safeGetStorage("biotrivial_questions_v3", "");
-  if (saved) {
-    try { questions = JSON.parse(saved); } catch (e) { questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)); }
-  } else {
-    questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+  const saved = safeGetStorage("biotrivial_questions_v4", "");
+  if (saved !== "") {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        questions = parsed;
+        return;
+      }
+    } catch (e) {}
   }
+  questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
 }
 
 function saveBank() {
-  safeSetStorage("biotrivial_questions_v3", JSON.stringify(questions));
+  safeSetStorage("biotrivial_questions_v4", JSON.stringify(questions));
   updateHeaderStatus();
 }
 
+function loadSavedTeams() {
+  const saved = safeGetStorage("biotrivial_teams_v4", "");
+  if (saved !== "") {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        teams = parsed.map(t => ({
+          id: t.id || ("team-" + Math.random().toString(36).substring(2, 7)),
+          name: t.name || "Equipo",
+          score: parseInt(t.score, 10) || 0,
+          connected: false,
+          conn: null
+        }));
+        return;
+      }
+    } catch (e) {}
+  }
+  teams = JSON.parse(JSON.stringify(DEFAULT_TEAMS));
+}
+
+function saveTeams() {
+  const cleanTeams = teams.map(t => ({
+    id: t.id,
+    name: t.name,
+    score: parseInt(t.score, 10) || 0
+  }));
+  safeSetStorage("biotrivial_teams_v4", JSON.stringify(cleanTeams));
+}
+
 // ==================== PASSWORD PROTECTION FOR TEACHER MODE ====================
-function openPasswordModal() {
+function openPasswordModal(prefillRoom = "") {
   document.getElementById("teacherPassInput").value = "";
   document.getElementById("passErrorMsg").style.display = "none";
+  const joinInp = document.getElementById("teacherRoomJoinInput");
+  if (joinInp) {
+    // Siempre vacío por defecto salvo que se entre mediante un enlace/QR directo de profesor
+    joinInp.value = prefillRoom ? String(prefillRoom).trim().toUpperCase() : "";
+  }
   openModal("passwordModal");
   setTimeout(() => document.getElementById("teacherPassInput").focus(), 100);
 }
 
-function verifyTeacherPassword() {
+function verifyTeacherPassword(forceJoinExisting = null) {
   const val = document.getElementById("teacherPassInput").value.trim();
+  const joinInp = document.getElementById("teacherRoomJoinInput");
+  const roomToJoin = joinInp ? joinInp.value.trim().toUpperCase() : "";
+
   if (val === teacherPassword || val.toLowerCase() === "biotrivial") {
+    if (forceJoinExisting === true && !roomToJoin) {
+      const errEl = document.getElementById("passErrorMsg");
+      errEl.textContent = "⚠️ Escribe el código de 4 dígitos de la sala a la que quieres unirte.";
+      errEl.style.display = "block";
+      if (joinInp) joinInp.focus();
+      return;
+    }
     closeModal("passwordModal");
-    startHostMode();
+    if (forceJoinExisting === false) {
+      startHostMode("", false);
+    } else if (roomToJoin) {
+      startHostMode(roomToJoin, true);
+    } else {
+      startHostMode("", false);
+    }
   } else {
-    document.getElementById("passErrorMsg").style.display = "block";
+    const errEl = document.getElementById("passErrorMsg");
+    errEl.textContent = "❌ Contraseña incorrecta.";
+    errEl.style.display = "block";
     playFailReboundSound();
   }
 }
@@ -1807,8 +1944,8 @@ function updateTeacherPassword(newPass) {
   showToast("🔑 Contraseña del Modo Profesor actualizada");
 }
 
-// ==================== START TEACHER MODE (MODO PRINCIPAL) ====================
-function startHostMode() {
+// ==================== START TEACHER MODE (MODO PRINCIPAL O MANDO REMOTO) ====================
+function startHostMode(desiredRoomCode = "", joinAsRemote = false) {
   appRole = "HOST";
   document.getElementById("roleSelectorScreen").style.display = "none";
   document.getElementById("presentationApp").style.display = "none";
@@ -1819,8 +1956,34 @@ function startHostMode() {
   updateHeaderStatus();
   renderSlideAndPodium();
   renderProfRightPanel();
-  // El Modo Profesor es siempre el modo principal y genera automáticamente el código de sala
-  initUnifiedRoomConnection("", false);
+
+  if (desiredRoomCode) {
+    initUnifiedRoomConnection(desiredRoomCode, Boolean(joinAsRemote));
+  } else {
+    initUnifiedRoomConnection("", false);
+  }
+}
+
+function switchTeacherToExistingRoom() {
+  const inp = document.getElementById("switchTeacherRoomInput");
+  const newCode = inp ? inp.value.trim().toUpperCase() : "";
+  if (!newCode) {
+    showToast("⚠️ Escribe el código de la sala a la que quieres conectarte");
+    return;
+  }
+  if (hubConn) {
+    try { hubConn.close(); } catch (e) {}
+    hubConn = null;
+  }
+  if (peer) {
+    try { peer.destroy(); } catch (e) {}
+    peer = null;
+  }
+  connectedPeers = [];
+  initUnifiedRoomConnection(newCode, true);
+  if (inp) inp.value = "";
+  closeModal("qrModal");
+  showToast(`🔗 Conectando Panel del Profesor a la Sala ${newCode}...`);
 }
 
 // ==================== START PRESENTATION MODE (SOLO DESDE MODO PROFESOR EN OTRA VENTANA) ====================
@@ -2136,9 +2299,13 @@ function executeTeacherCommandOnHub(cmd) {
     case "REVEAL_SOLUTION":
       hubRevealSolutionManual();
       break;
+    case "END_GAME":
+      hubEndGame();
+      break;
     case "ADJUST_SCORE":
       if (teams[cmd.teamIdx]) {
         teams[cmd.teamIdx].score = Math.max(0, teams[cmd.teamIdx].score + cmd.delta);
+        saveTeams();
         renderSlideAndPodium(currentSolutionVisible, currentSolutionLabel);
         renderProfRightPanel();
         broadcastStateToAll();
@@ -2150,15 +2317,29 @@ function executeTeacherCommandOnHub(cmd) {
           ...t,
           conn: teams[i] ? teams[i].conn : null
         }));
+        saveTeams();
       }
       if (cmd.questions) {
         questions = cmd.questions;
-        currentQuestion = questions[0] || currentQuestion;
+        currentQuestion = questions.length > 0 ? questions[0] : null;
         saveBank();
         populateTopicFilter();
       }
       renderSlideAndPodium(currentSolutionVisible, currentSolutionLabel);
       renderProfRightPanel();
+      broadcastStateToAll();
+      break;
+    case "RESET_USED_QUESTIONS":
+      questions.forEach(q => q.usada = false);
+      saveBank();
+      populateTopicFilter();
+      renderSlideAndPodium(currentSolutionVisible, currentSolutionLabel);
+      renderProfRightPanel();
+      broadcastStateToAll();
+      showToast("🔄 Todas las preguntas están disponibles de nuevo");
+      break;
+    case "TOGGLE_TIMER":
+      if (timerInterval) stopTimer(); else startTimer();
       broadcastStateToAll();
       break;
   }
@@ -2191,6 +2372,14 @@ function revealSolutionManual() {
   sendOrRunTeacherCommand({ action: "REVEAL_SOLUTION" });
 }
 
+function endGameSession() {
+  if (!teams || teams.length === 0) {
+    showToast("⚠️ No hay equipos registrados todavía para proclamar un ganador.");
+    return;
+  }
+  sendOrRunTeacherCommand({ action: "END_GAME" });
+}
+
 function adjustScore(idx, delta) {
   sendOrRunTeacherCommand({ action: "ADJUST_SCORE", teamIdx: idx, delta });
 }
@@ -2213,7 +2402,8 @@ function buildSyncPayload() {
     solutionVisible: currentSolutionVisible,
     solutionLabel: currentSolutionLabel,
     timerRemaining: timerRemaining,
-    lastSound: lastEmittedSound
+    lastSound: lastEmittedSound,
+    questions: questions
   };
 }
 
@@ -2266,6 +2456,19 @@ function applyIncomingStateSync(state) {
       ...t,
       conn: teams[idx] ? teams[idx].conn : null
     }));
+    saveTeams();
+  }
+
+  if (Array.isArray(state.questions) && state.questions.length > 0) {
+    questions = state.questions;
+    saveBank();
+    populateTopicFilter();
+    updateHeaderStatus();
+  }
+
+  if (state.timerRemaining !== undefined) {
+    timerRemaining = state.timerRemaining;
+    updateTimerUI();
   }
 
   if (appRole === "STUDENT") {
@@ -2298,6 +2501,7 @@ function handleIncomingStudentPacket(data, conn) {
       teams[idx].connected = true;
       if (conn) teams[idx].conn = conn;
     }
+    saveTeams();
     if (!wasAlreadyConnected) {
       emitSoundEvent("TEAM_JOIN");
       showToast(`📱 Equipo conectado: ${data.teamName}`);
@@ -2334,6 +2538,10 @@ function handleIncomingStudentPacket(data, conn) {
 // ==================== HUB GAMEPLAY LOGIC ====================
 function hubLaunchNextQuestion(filterVal = "ALL") {
   stopTimer();
+  if (!questions || questions.length === 0) {
+    showToast("⚠️ No hay preguntas cargadas. Sube tu Excel o añade preguntas en «🗂️ Preguntas».");
+    return;
+  }
   let pool = (filterVal === "ALL" ? questions : questions.filter(q => q.bloque === filterVal)).filter(q => !q.usada);
 
   if (pool.length === 0) {
@@ -2412,6 +2620,7 @@ function hubRegisterAnswer(isCorrect) {
   if (isCorrect) {
     const pts = roundPhase === "BUZZERS_OPEN_2PTS" ? 2 : 1;
     team.score += pts;
+    saveTeams();
     emitSoundEvent("CORRECT");
 
     const msg = pts === 2
@@ -2489,6 +2698,35 @@ function hubRevealSolutionManual() {
   broadcastStateToAll();
 }
 
+function getWinnersSummary() {
+  if (!teams || teams.length === 0) {
+    return { maxScore: 0, winners: [], winnerNames: "Sin equipos", sorted: [] };
+  }
+  const sorted = [...teams].sort((a, b) => b.score - a.score);
+  const maxScore = sorted[0].score;
+  const winners = sorted.filter(t => t.score === maxScore);
+  const winnerNames = winners.map(w => w.name).join(" y ");
+  return { maxScore, winners, winnerNames, sorted };
+}
+
+function hubEndGame() {
+  stopTimer();
+  roundPhase = "GAME_OVER";
+  selectedTeamIdx = null;
+  buzzerQueue = [];
+  failedTeamsInRound.clear();
+  currentSolutionVisible = false;
+  currentSolutionLabel = "";
+
+  const { maxScore, winnerNames } = getWinnersSummary();
+  emitSoundEvent("VICTORY_FANFARE");
+  renderSlideAndPodium(false);
+  renderProfRightPanel();
+  updateTeacherButtonsState();
+  broadcastStateToAll();
+  showToast(`🏆 ¡FIN DE LA PARTIDA! Ganador: ${winnerNames} (${maxScore} ptos)`);
+}
+
 function updateTeacherButtonsState() {
   const btnAct = document.getElementById("btnActivateBuzzers");
   const presBtnAct = document.getElementById("presBtnActivate");
@@ -2533,9 +2771,20 @@ function updateTeacherButtonsState() {
 
 // ==================== RENDER SLIDE, SCORE TABLE & 3D PODIUM ====================
 function renderSlideAndPodium(showSolution = false, customSolLabel = "") {
-  const qText = currentQuestion ? currentQuestion.pregunta : "¿Qué es el fijismo?";
-  const bText = currentQuestion ? (currentQuestion.bloque || "Bloque 1") : "Bloque 1";
-  const qImg = currentQuestion ? (currentQuestion.imagen || "") : "";
+  const isGameOver = roundPhase === "GAME_OVER";
+  const { maxScore, winners, winnerNames, sorted } = getWinnersSummary();
+
+  const qText = currentQuestion
+    ? currentQuestion.pregunta
+    : (questions.length > 0
+        ? `✅ ${questions.length} preguntas listas · Pulsa «🎲 1. Sacar Pregunta» para empezar`
+        : "Banco de preguntas vacío · Carga tu Excel o añade preguntas");
+  const bText = isGameOver
+    ? "🏆 Fin del Juego"
+    : (currentQuestion
+        ? (currentQuestion.bloque || "Bloque 1")
+        : (questions.length > 0 ? "Preparados" : "Sin preguntas"));
+  const qImg = (!isGameOver && currentQuestion) ? (currentQuestion.imagen || "") : "";
 
   ["pres", "prof"].forEach(prefix => {
     const bEl = document.getElementById(prefix + "BloqueText");
@@ -2548,7 +2797,34 @@ function renderSlideAndPodium(showSolution = false, customSolLabel = "") {
     const imgTag = document.getElementById(prefix + "QuestionImg");
 
     if (bEl) bEl.textContent = bText;
-    if (qEl) qEl.textContent = qText;
+
+    if (qEl) {
+      if (isGameOver) {
+        const titleLabel = winners.length > 1
+          ? "¡EMPATE EN PRIMERA POSICIÓN!"
+          : "¡EQUIPO GANADOR DE LA PARTIDA!";
+        const runnerUpHtml = sorted.length > 1
+          ? `<div style="font-size:clamp(0.85rem, 1.4vw, 1.15rem); font-weight:700; color:#334155; margin-top:4px;">
+               🥈 2º: ${sorted[1].name} (${sorted[1].score} ptos)${sorted[2] ? ` &nbsp;·&nbsp; 🥉 3º: ${sorted[2].name} (${sorted[2].score} ptos)` : ""}
+             </div>`
+          : "";
+        qEl.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;">
+            <div style="font-size:clamp(2.4rem, 4.5vw, 4.2rem); line-height:1; filter:drop-shadow(0 6px 12px rgba(0,0,0,0.18));">🏆</div>
+            <div style="font-size:clamp(0.85rem, 1.5vw, 1.2rem); font-weight:900; color:#065f46; letter-spacing:2px; text-transform:uppercase;">${titleLabel}</div>
+            <div style="font-size:clamp(1.6rem, 3.6vw, 3.4rem); font-weight:900; color:#92400e; background:linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border:4px solid #f59e0b; padding:10px 32px; border-radius:22px; box-shadow:0 12px 30px rgba(245, 158, 11, 0.35); text-transform:uppercase; line-height:1.15;">
+              👑 ${winnerNames}
+            </div>
+            <div style="font-size:clamp(1.05rem, 2vw, 1.55rem); font-weight:900; color:#0f172a; margin-top:2px;">
+              Campeón con <span style="color:#059669;">${maxScore} puntos</span>
+            </div>
+            ${runnerUpHtml}
+          </div>
+        `;
+      } else {
+        qEl.textContent = qText;
+      }
+    }
 
     if (imgBox && imgTag) {
       if (qImg) {
@@ -2561,7 +2837,10 @@ function renderSlideAndPodium(showSolution = false, customSolLabel = "") {
     }
 
     if (pillEl) {
-      if (roundPhase === "IDLE") {
+      if (isGameOver) {
+        pillEl.className = "slide-buzzer-pill state-gameover";
+        pillEl.textContent = "👑 ¡PARTIDA FINALIZADA! · CUADRO DE HONOR";
+      } else if (roundPhase === "IDLE") {
         pillEl.className = "slide-buzzer-pill state-locked";
         pillEl.textContent = `🔒 Sala ${roomCode || "----"} · Esperando pregunta...`;
       } else if (roundPhase === "READING_QUESTION") {
@@ -2584,7 +2863,7 @@ function renderSlideAndPodium(showSolution = false, customSolLabel = "") {
     }
 
     if (solCard) {
-      if (showSolution && currentQuestion) {
+      if (!isGameOver && showSolution && currentQuestion) {
         solCard.classList.add("visible");
         document.getElementById(prefix + "SolLabel").textContent = customSolLabel || "✅ Respuesta Correcta";
         document.getElementById(prefix + "SolText").textContent = currentQuestion.respuesta;
@@ -2596,18 +2875,23 @@ function renderSlideAndPodium(showSolution = false, customSolLabel = "") {
 
     if (stripEl) {
       stripEl.innerHTML = "";
-      teams.forEach((t, idx) => {
-        const col = document.createElement("div");
-        let cls = "strip-team-col";
-        if (selectedTeamIdx === idx) cls += " answering-now";
-        if (failedTeamsInRound.has(idx)) cls += " failed-now";
-        col.className = cls;
-        col.innerHTML = `
-          <div class="strip-team-name">${t.name}</div>
-          <div class="strip-team-score">${t.score}</div>
-        `;
-        stripEl.appendChild(col);
-      });
+      if (teams.length === 0) {
+        stripEl.innerHTML = `<div style="color:#090d16; font-weight:700; font-size:0.95rem; opacity:0.65; padding:10px 6px; text-align:center; width:100%;">Sin equipos todavía · Conecta los móviles con el QR o añádelos en «👥 Equipos»</div>`;
+      } else {
+        teams.forEach((t, idx) => {
+          const col = document.createElement("div");
+          let cls = "strip-team-col";
+          const isWinnerTeam = isGameOver && t.score === maxScore && teams.length > 0;
+          if (selectedTeamIdx === idx || isWinnerTeam) cls += " answering-now";
+          if (failedTeamsInRound.has(idx)) cls += " failed-now";
+          col.className = cls;
+          col.innerHTML = `
+            <div class="strip-team-name">${isWinnerTeam ? "👑 " : ""}${t.name}</div>
+            <div class="strip-team-score">${t.score}</div>
+          `;
+          stripEl.appendChild(col);
+        });
+      }
     }
 
     if (podiumEl) {
@@ -2662,6 +2946,9 @@ function renderProfRightPanel() {
   const tList = document.getElementById("profTeamsList");
   if (tList) {
     tList.innerHTML = "";
+    if (teams.length === 0) {
+      tList.innerHTML = `<div style="font-size:0.82rem; color:var(--text-muted); padding:8px 4px; line-height:1.45;">No hay equipos creados. Aparecerán aquí automáticamente conforme se conecten desde sus móviles o puedes crearlos en «👥 Equipos / Clave».</div>`;
+    }
     teams.forEach((t, idx) => {
       const row = document.createElement("div");
       row.style = `display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px; background:#0b1120; border:2px solid ${selectedTeamIdx === idx ? '#10b981' : 'rgba(255,255,255,0.1)'}; cursor:pointer;`;
@@ -2827,7 +3114,27 @@ function updateStudentMobileUI(state) {
     return t && (t.id === studentTeamId || normalizeStr(t.name) === normalizeStr(studentTeamName));
   });
 
-  if (state.roundPhase === "IDLE" || state.roundPhase === "RESOLVED") {
+  if (state.roundPhase === "GAME_OVER") {
+    const allTeams = state.teams || [];
+    const sortedT = [...allTeams].sort((a, b) => b.score - a.score);
+    const topScore = sortedT.length > 0 ? sortedT[0].score : 0;
+    const winList = sortedT.filter(t => t.score === topScore);
+    const winNames = winList.map(w => w.name).join(" y ") || "Sin equipos";
+    const amIWinner = myTeam && myTeam.score === topScore && allTeams.length > 0;
+
+    document.getElementById("mobileQuestionPreview").textContent = `🏆 Equipo ganador: ${winNames} (${topScore} ptos)`;
+    if (amIWinner) {
+      btn.className = "giant-buzzer-btn state-you-won";
+      icon.textContent = "🏆";
+      label.textContent = "¡HABÉIS GANADO!";
+      sub.textContent = `👑 Campeones de bioTRIVIAL con ${topScore} puntos`;
+    } else {
+      btn.className = "giant-buzzer-btn state-reading";
+      icon.textContent = "🏁";
+      label.textContent = "FIN DE LA PARTIDA";
+      sub.textContent = `🏆 Ganador: ${winNames} (${topScore} puntos)`;
+    }
+  } else if (state.roundPhase === "IDLE" || state.roundPhase === "RESOLVED") {
     btn.className = "giant-buzzer-btn state-waiting";
     icon.textContent = "⏳";
     label.textContent = "ESPERANDO PREGUNTA";
@@ -2879,6 +3186,7 @@ function startTimer() {
       emitSoundEvent("FAIL_REBOUND");
       showToast("⏰ ¡Tiempo agotado!");
     }
+    if (isRoomHub) broadcastStateToAll();
   }, 1000);
 }
 
@@ -2887,7 +3195,7 @@ function stopTimer() {
 }
 
 function toggleTimer() {
-  if (timerInterval) stopTimer(); else startTimer();
+  sendOrRunTeacherCommand({ action: "TOGGLE_TIMER" });
 }
 
 function resetTimer() {
@@ -2908,6 +3216,7 @@ function updateTimerUI() {
 function populateTopicFilter() {
   const sel = document.getElementById("topicFilter");
   if (!sel) return;
+  const prevVal = sel.value || "ALL";
   const topics = [];
   questions.forEach(q => {
     const b = (q.bloque || "Bloque 1").trim();
@@ -2921,6 +3230,9 @@ function populateTopicFilter() {
     o.textContent = `${t} (${c})`;
     sel.appendChild(o);
   });
+  if (prevVal === "ALL" || topics.includes(prevVal)) {
+    sel.value = prevVal;
+  }
 }
 
 function updateHeaderStatus() {
@@ -3091,11 +3403,14 @@ function addQuickQuestion() {
   const bloque = document.getElementById("quickTopic").value.trim() || "Bloque 1";
   const preg = document.getElementById("quickQ").value.trim();
   const resp = document.getElementById("quickA").value.trim();
+  const imgEl = document.getElementById("quickImg");
+  const img = imgEl ? imgEl.value.trim() : "";
   if (!preg || !resp) return;
-  questions.push({ id: questions.length + 1, bloque, pregunta: preg, respuesta: resp, explicacion: "", opciones: [], usada: false });
+  questions.push({ id: questions.length + 1, bloque, pregunta: preg, respuesta: resp, explicacion: "", imagen: img, opciones: [], usada: false });
   if (!currentQuestion) currentQuestion = questions[0];
   document.getElementById("quickQ").value = "";
   document.getElementById("quickA").value = "";
+  if (imgEl) imgEl.value = "";
   saveBank();
   populateTopicFilter();
   renderDbModalTable();
@@ -3115,9 +3430,7 @@ function restoreDefaultBank() {
 }
 
 function resetAllUsedQuestions() {
-  questions.forEach(q => q.usada = false);
-  saveBank();
-  showToast("🔄 Todas las preguntas están disponibles de nuevo");
+  sendOrRunTeacherCommand({ action: "RESET_USED_QUESTIONS" });
 }
 
 // ==================== TEAMS & MODALS ====================
@@ -3131,6 +3444,7 @@ function closeModal(id) {
 }
 
 function syncTeamsChanges() {
+  saveTeams();
   sendOrRunTeacherCommand({
     action: "SYNC_TEAMS_AND_QUESTIONS",
     teams: teams.map(t => ({ id: t.id, name: t.name, score: t.score, connected: t.connected }))
@@ -3138,18 +3452,90 @@ function syncTeamsChanges() {
 }
 
 function renderTeamsConfig() {
+  const passInput = document.getElementById("newTeacherPassInput");
+  if (passInput) passInput.value = teacherPassword;
+
   const c = document.getElementById("teamsConfigContainer");
   c.innerHTML = "";
+  if (teams.length === 0) {
+    c.innerHTML = `<div style="font-size:0.85rem; color:#94a3b8; padding:8px 0;">No hay equipos registrados. Pulsa «➕ Añadir Equipo» o deja que los alumnos se conecten con sus móviles.</div>`;
+  }
   teams.forEach((t, idx) => {
     const row = document.createElement("div");
     row.style = "display:flex; gap:8px; align-items:center;";
     row.innerHTML = `
-      <input type="text" value="${t.name}" style="flex:1" onchange="teams[${idx}].name = this.value; syncTeamsChanges();" />
-      <input type="text" value="${t.score}" style="width:70px; text-align:center;" onchange="teams[${idx}].score = parseInt(this.value,10)||0; syncTeamsChanges();" />
+      <input type="text" class="team-name-edit-input" data-idx="${idx}" value="${t.name}" style="flex:1" oninput="teams[${idx}].name = this.value; syncTeamsChanges();" />
+      <input type="text" class="team-score-edit-input" data-idx="${idx}" value="${t.score}" style="width:70px; text-align:center;" oninput="teams[${idx}].score = parseInt(this.value,10)||0; syncTeamsChanges();" />
       <button class="btn btn-err" onclick="teams.splice(${idx}, 1); renderTeamsConfig(); syncTeamsChanges();">✖</button>
     `;
     c.appendChild(row);
   });
+}
+
+function saveAndCloseTeamsModal() {
+  const passInput = document.getElementById("newTeacherPassInput");
+  if (passInput && passInput.value.trim()) {
+    teacherPassword = passInput.value.trim();
+    safeSetStorage("biotrivial_teacher_pass", teacherPassword);
+  }
+  document.querySelectorAll(".team-name-edit-input").forEach(inp => {
+    const idx = parseInt(inp.getAttribute("data-idx"), 10);
+    if (teams[idx]) teams[idx].name = inp.value.trim() || ("Equipo " + (idx + 1));
+  });
+  document.querySelectorAll(".team-score-edit-input").forEach(inp => {
+    const idx = parseInt(inp.getAttribute("data-idx"), 10);
+    if (teams[idx]) teams[idx].score = parseInt(inp.value, 10) || 0;
+  });
+  syncTeamsChanges();
+  closeModal("teamsModal");
+  showToast("💾 Equipos, puntuaciones y contraseña guardados");
+}
+
+function downloadUpdatedIndexHtml() {
+  saveBank();
+  saveTeams();
+  let rawSource = CLEAN_HTML_SNAPSHOT || ("<!DOCTYPE html>\n<html lang=\"es\">\n" + document.documentElement.innerHTML + "\n</html>");
+  const cleanQuestions = questions.map((q, i) => ({
+    id: i + 1,
+    bloque: q.bloque || "Bloque 1",
+    pregunta: q.pregunta || "",
+    respuesta: q.respuesta || "",
+    explicacion: q.explicacion || "",
+    imagen: q.imagen || "",
+    opciones: q.opciones || [],
+    usada: false
+  }));
+  const cleanTeams = teams.map((t, i) => ({
+    id: t.id || ("team-" + (i + 1)),
+    name: t.name || ("Equipo " + (i + 1)),
+    score: parseInt(t.score, 10) || 0,
+    connected: false,
+    conn: null
+  }));
+
+  rawSource = rawSource.replace(
+    /const DEFAULT_QUESTIONS = \[.*?\];/s,
+    "const DEFAULT_QUESTIONS = " + JSON.stringify(cleanQuestions) + ";"
+  );
+  rawSource = rawSource.replace(
+    /const DEFAULT_TEAMS = \[.*?\];/s,
+    "const DEFAULT_TEAMS = " + JSON.stringify(cleanTeams) + ";"
+  );
+  rawSource = rawSource.replace(
+    /safeGetStorage\("biotrivial_teacher_pass", ".*?"\)/,
+    `safeGetStorage("biotrivial_teacher_pass", ${JSON.stringify(teacherPassword)})`
+  );
+
+  const blob = new Blob([rawSource], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "index.html";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("📥 Archivo index.html descargado con todos tus datos grabados");
 }
 
 function addManualTeam() {
@@ -3165,6 +3551,30 @@ function resetScoresToZero() {
   showToast("🗑️ Puntuaciones a 0");
 }
 
+let currentQrRoleMode = "student";
+
+function setQrRoleMode(mode) {
+  currentQrRoleMode = mode === "teacher" ? "teacher" : "student";
+  const btnStu = document.getElementById("btnQrModeStudent");
+  const btnTea = document.getElementById("btnQrModeTeacher");
+  const cap = document.getElementById("qrModeCaption");
+  if (btnStu && btnTea) {
+    if (currentQrRoleMode === "student") {
+      btnStu.className = "btn btn-ok";
+      btnTea.className = "btn";
+    } else {
+      btnStu.className = "btn";
+      btnTea.className = "btn btn-step-1";
+    }
+  }
+  if (cap) {
+    cap.textContent = currentQrRoleMode === "student"
+      ? "📱 Escanea este QR con los móviles de los alumnos para abrir su pulsador"
+      : "👨‍🏫 Escanea este QR con tu Tablet o Móvil para entrar en Modo Profesor a esta misma sala";
+  }
+  generateRoomQR();
+}
+
 function generateRoomQR() {
   const box = document.getElementById("qrcodeContainer");
   if (!box || typeof QRCode === "undefined") return;
@@ -3176,7 +3586,8 @@ function generateRoomQR() {
   if (customInput && !customInput.value && savedPublicUrl) customInput.value = savedPublicUrl;
   const baseUrl = savedPublicUrl || window.location.href;
   const cleanBase = baseUrl.split("#")[0].split("?")[0];
-  const qrTargetUrl = `${cleanBase}?role=student&room=${roomCode}#student-${roomCode}`;
+  const roleSlug = currentQrRoleMode === "teacher" ? "teacher" : "student";
+  const qrTargetUrl = `${cleanBase}?role=${roleSlug}&room=${roomCode}#${roleSlug}-${roomCode}`;
   new QRCode(box, { text: qrTargetUrl, width: 150, height: 150 });
 }
 
